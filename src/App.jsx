@@ -308,40 +308,48 @@ function DailyDashboard({ todayName, tasks, schedule, fixedBlocks, setFocusDay, 
   const todayFixedMins = todayFixed.reduce((s, b) => s + (b.endHour - b.startHour) * 60, 0);
 
   return (
-    <div style={{ background: "#e8f2ea", border: "1px solid #a8c4b044", borderRadius: 10, padding: "12px 16px", marginBottom: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: "#82b99a", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: "bold" }}>Today — {todayName}</div>
-        <button onClick={() => { setFocusDay(todayName); setFocusWeekOffset(0); setFocusMode(true); }} style={{ background: "none", border: "1px solid #a8c4b0", color: "#82b99a", borderRadius: 5, padding: "3px 10px", fontSize: 10, cursor: "pointer" }}>◉ Focus</button>
+    <div style={{ background: "#e8f2ea", border: "1px solid #a8c4b044", borderRadius: 8, padding: "8px 12px", marginBottom: 14 }}>
+      {/* Title row with Focus button inline */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <button
+          onClick={() => { setFocusDay(todayName); setFocusWeekOffset(0); setFocusMode(true); }}
+          style={{ background: "none", border: "none", color: "#82b99a", cursor: "pointer", fontSize: 12, padding: 0, display: "flex", alignItems: "center", gap: 5 }}
+        >
+          <span style={{ fontSize: 12 }}>◉</span>
+          <span style={{ fontSize: 11, color: "#82b99a", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: "bold" }}>Today — {todayName}</span>
+        </button>
       </div>
-      <div style={{ display: "flex", gap: 0, flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "4px 8px", borderRight: "1px solid #a8c4b044" }}>
-          <div style={{ fontSize: 20, color: "#82b99a" }}>{todayDone}</div>
-          <div style={{ fontSize: 9, color: "#82b99a", letterSpacing: "0.1em", textTransform: "uppercase" }}>Done</div>
+      {/* Stats row — all in one compact line */}
+      <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+        <div style={{ flex: 1, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #a8c4b044" }}>
+          <div style={{ fontSize: 16, color: "#82b99a", lineHeight: 1.2 }}>{todayDone}</div>
+          <div style={{ fontSize: 8, color: "#82b99a", letterSpacing: "0.08em", textTransform: "uppercase" }}>Done</div>
         </div>
-        <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "4px 8px", borderRight: "1px solid #a8c4b044" }}>
-          <div style={{ fontSize: 20, color: todayRemaining > 0 ? "#c8be90" : "#82b99a" }}>{todayRemaining}</div>
-          <div style={{ fontSize: 9, color: "#8a9e8a", letterSpacing: "0.1em", textTransform: "uppercase" }}>Left</div>
+        <div style={{ flex: 1, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #a8c4b044" }}>
+          <div style={{ fontSize: 16, color: todayRemaining > 0 ? "#c8be90" : "#82b99a", lineHeight: 1.2 }}>{todayRemaining}</div>
+          <div style={{ fontSize: 8, color: "#8a9e8a", letterSpacing: "0.08em", textTransform: "uppercase" }}>Left</div>
         </div>
-        <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "4px 8px", borderRight: "1px solid #a8c4b044" }}>
-          <div style={{ fontSize: 20, color: "#7aaec8" }}>{Math.round(todayMins / 60 * 10) / 10}h</div>
-          <div style={{ fontSize: 9, color: "#8a9e8a", letterSpacing: "0.1em", textTransform: "uppercase" }}>Tasks</div>
+        <div style={{ flex: 1, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #a8c4b044" }}>
+          <div style={{ fontSize: 16, color: "#7aaec8", lineHeight: 1.2 }}>{Math.round(todayMins / 60 * 10) / 10}h</div>
+          <div style={{ fontSize: 8, color: "#8a9e8a", letterSpacing: "0.08em", textTransform: "uppercase" }}>Tasks</div>
         </div>
         {todayFixed.length > 0 && (
-          <div style={{ flex: 1, minWidth: 60, textAlign: "center", padding: "4px 8px", borderRight: "1px solid #a8c4b044" }}>
-            <div style={{ fontSize: 20, color: "#d4a0b0" }}>{Math.round(todayFixedMins / 60 * 10) / 10}h</div>
-            <div style={{ fontSize: 9, color: "#8a9e8a", letterSpacing: "0.1em", textTransform: "uppercase" }}>Meetings</div>
+          <div style={{ flex: 1, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #a8c4b044" }}>
+            <div style={{ fontSize: 16, color: "#d4a0b0", lineHeight: 1.2 }}>{Math.round(todayFixedMins / 60 * 10) / 10}h</div>
+            <div style={{ fontSize: 8, color: "#8a9e8a", letterSpacing: "0.08em", textTransform: "uppercase" }}>Meetings</div>
           </div>
         )}
-        <div style={{ flex: 2, minWidth: 120, padding: "4px 8px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 5 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 9, color: "#82b99a" }}>Today's progress</span>
-            <span style={{ fontSize: 9, color: "#82b99a" }}>{todayPct}%</span>
+        {/* Progress bar */}
+        <div style={{ flex: 2, minWidth: 80, padding: "2px 8px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+            <span style={{ fontSize: 8, color: "#82b99a" }}>Progress</span>
+            <span style={{ fontSize: 8, color: "#82b99a" }}>{todayPct}%</span>
           </div>
-          <div style={{ height: 5, background: "#a8c4b033", borderRadius: 3, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${todayPct}%`, background: "linear-gradient(90deg, #82b99a, #a8c4b0)", borderRadius: 3, transition: "width 0.4s" }} />
+          <div style={{ height: 4, background: "#a8c4b033", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${todayPct}%`, background: "linear-gradient(90deg, #82b99a, #a8c4b0)", borderRadius: 2, transition: "width 0.4s" }} />
           </div>
-          {todayDone > 0 && todayRemaining === 0 && <div style={{ fontSize: 9, color: "#82b99a", textAlign: "center" }}>✓ All done for today!</div>}
-          {todayTasks.length === 0 && <div style={{ fontSize: 9, color: "#8a9e8a", textAlign: "center" }}>Nothing scheduled today</div>}
+          {todayDone > 0 && todayRemaining === 0 && <div style={{ fontSize: 8, color: "#82b99a", marginTop: 2 }}>✓ All done!</div>}
+          {todayTasks.length === 0 && <div style={{ fontSize: 8, color: "#8a9e8a", marginTop: 2 }}>Nothing today</div>}
         </div>
       </div>
     </div>
@@ -1107,9 +1115,6 @@ export default function App() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 11, color: "#a29890" }}>{tasks.length} tasks</span>
-            <button onClick={() => setFocusMode(f => !f)} style={{ background: focusMode ? "#a8c4b020" : "none", border: `1px solid ${focusMode ? "#a8c4b0" : "#d6d0c8"}`, color: focusMode ? "#82b99a" : "#8a7e76", fontSize: 11, padding: "5px 10px", borderRadius: 6, cursor: "pointer" }}>
-              {focusMode ? "◉ Focus" : "○ Focus"}
-            </button>
           </div>
         </div>
         {/* Desktop nav — hidden on small screens via overflow scroll */}
