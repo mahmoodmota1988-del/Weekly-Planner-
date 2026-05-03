@@ -327,11 +327,11 @@ function DailyDashboard({ todayName, tasks, schedule, fixedBlocks, setFocusDay, 
         </div>
         <div style={{ flex: 1, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #a8c4b044" }}>
           <div style={{ fontSize: 16, color: todayRemaining > 0 ? "#c8be90" : "#82b99a", lineHeight: 1.2 }}>{todayRemaining}</div>
-          <div style={{ fontSize: 8, color: "#8a9e8a", letterSpacing: "0.08em", textTransform: "uppercase" }}>Left</div>
+          <div style={{ fontSize: 8, color: "#8a9e8a", letterSpacing: "0.08em", textTransform: "uppercase" }}>Remaining</div>
         </div>
         <div style={{ flex: 1, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #a8c4b044" }}>
           <div style={{ fontSize: 16, color: "#7aaec8", lineHeight: 1.2 }}>{Math.round(todayMins / 60 * 10) / 10}h</div>
-          <div style={{ fontSize: 8, color: "#8a9e8a", letterSpacing: "0.08em", textTransform: "uppercase" }}>Tasks</div>
+          <div style={{ fontSize: 8, color: "#8a9e8a", letterSpacing: "0.08em", textTransform: "uppercase" }}>Planned</div>
         </div>
         {todayFixed.length > 0 && (
           <div style={{ flex: 1, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #a8c4b044" }}>
@@ -1824,57 +1824,61 @@ export default function App() {
               >Next →</button>
             </div>
 
-            {/* ── Progress Overview Bar ── */}
-            <div style={{ background: "#efeae2", border: "1px solid #d6d0c8", borderRadius: 10, padding: "12px 16px", marginBottom: 14, display: "flex", gap: 0, flexWrap: "wrap" }}>
-              {/* Completed */}
-              <div style={{ flex: 1, minWidth: 80, textAlign: "center", padding: "4px 12px", borderRight: "1px solid #d6d0c8" }}>
-                <div style={{ fontSize: 22, fontWeight: "normal", color: "#82b99a" }}>{completedTasks}</div>
-                <div style={{ fontSize: 10, color: "#8a7e76", letterSpacing: "0.1em", textTransform: "uppercase" }}>Done</div>
-              </div>
-              {/* Remaining */}
-              <div style={{ flex: 1, minWidth: 80, textAlign: "center", padding: "4px 12px", borderRight: "1px solid #d6d0c8" }}>
-                <div style={{ fontSize: 22, fontWeight: "normal", color: "#7aaec8" }}>{scheduledThisWeek - completedTasks < 0 ? 0 : scheduledThisWeek - completedTasks}</div>
-                <div style={{ fontSize: 10, color: "#8a7e76", letterSpacing: "0.1em", textTransform: "uppercase" }}>Remaining</div>
-              </div>
-              {/* Overdue */}
-              <div style={{ flex: 1, minWidth: 80, textAlign: "center", padding: "4px 12px", borderRight: "1px solid #d6d0c8" }}>
-                <div style={{ fontSize: 22, fontWeight: "normal", color: overdueTasks.length > 0 ? "#c89898" : "#82b99a" }}>{overdueTasks.length}</div>
-                <div style={{ fontSize: 10, color: "#8a7e76", letterSpacing: "0.1em", textTransform: "uppercase" }}>Overdue</div>
-              </div>
-              {/* Total planned time */}
-              <div style={{ flex: 1, minWidth: 80, textAlign: "center", padding: "4px 12px", borderRight: "1px solid #d6d0c8" }}>
-                <div style={{ fontSize: 22, fontWeight: "normal", color: "#a99ec8" }}>{Math.round(totalPlannedMins / 60 * 10) / 10}h</div>
-                <div style={{ fontSize: 10, color: "#8a7e76", letterSpacing: "0.1em", textTransform: "uppercase" }}>Planned</div>
-              </div>
-              {/* Progress bar + carry over */}
-              <div style={{ flex: 2, minWidth: 160, padding: "4px 12px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 6 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                  <span style={{ fontSize: 10, color: "#8a7e76" }}>Weekly progress</span>
-                  <span style={{ fontSize: 10, color: "#8a7e76" }}>{totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%</span>
-                </div>
-                <div style={{ height: 6, background: "#d6d0c8", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%`, background: "linear-gradient(90deg, #82b99a, #a8c4b0)", borderRadius: 3, transition: "width 0.4s" }} />
-                </div>
-                {overdueTasks.length > 0 && (
-                  <button onClick={() => setShowCarryOverPanel(true)} style={{ background: "#c8989820", border: "1px solid #c89898", color: "#c89898", borderRadius: 5, padding: "4px 10px", fontSize: 11, cursor: "pointer", marginTop: 2 }}>
-                    ↻ {overdueTasks.length} overdue task{overdueTasks.length !== 1 ? "s" : ""} — carry over?
-                  </button>
-                )}
-              </div>
-            </div>
+            {/* ── Weekly + Daily Progress side by side ── */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
 
-            {/* ── Daily Progress Dashboard ── */}
-            {weekOffset === 0 && (
-              <DailyDashboard
-                todayName={todayName}
-                tasks={tasks}
-                schedule={schedule}
-                fixedBlocks={fixedBlocks}
-                setFocusDay={setFocusDay}
-                setFocusWeekOffset={setFocusWeekOffset}
-                setFocusMode={setFocusMode}
-              />
-            )}
+              {/* Weekly */}
+              <div style={{ flex: 2, minWidth: 220, background: "#efeae2", border: "1px solid #d6d0c8", borderRadius: 10, padding: "10px 12px" }}>
+                <div style={{ fontSize: 9, color: "#8a7e76", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8 }}>This Week</div>
+                <div style={{ display: "flex", gap: 0, flexWrap: "wrap", marginBottom: 8 }}>
+                  <div style={{ flex: 1, minWidth: 50, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #d6d0c8" }}>
+                    <div style={{ fontSize: 18, fontWeight: "normal", color: "#82b99a" }}>{completedTasks}</div>
+                    <div style={{ fontSize: 8, color: "#8a7e76", letterSpacing: "0.08em", textTransform: "uppercase" }}>Done</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 50, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #d6d0c8" }}>
+                    <div style={{ fontSize: 18, fontWeight: "normal", color: "#7aaec8" }}>{scheduledThisWeek - completedTasks < 0 ? 0 : scheduledThisWeek - completedTasks}</div>
+                    <div style={{ fontSize: 8, color: "#8a7e76", letterSpacing: "0.08em", textTransform: "uppercase" }}>Remaining</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 50, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #d6d0c8" }}>
+                    <div style={{ fontSize: 18, fontWeight: "normal", color: overdueTasks.length > 0 ? "#c89898" : "#82b99a" }}>{overdueTasks.length}</div>
+                    <div style={{ fontSize: 8, color: "#8a7e76", letterSpacing: "0.08em", textTransform: "uppercase" }}>Overdue</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 50, textAlign: "center", padding: "2px 6px", borderRight: "1px solid #d6d0c8" }}>
+                    <div style={{ fontSize: 18, fontWeight: "normal", color: "#a99ec8" }}>{Math.round(totalPlannedMins / 60 * 10) / 10}h</div>
+                    <div style={{ fontSize: 8, color: "#8a7e76", letterSpacing: "0.08em", textTransform: "uppercase" }}>Planned</div>
+                  </div>
+                  <div style={{ flex: 2, minWidth: 100, padding: "2px 8px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 8, color: "#8a7e76" }}>Weekly progress</span>
+                      <span style={{ fontSize: 8, color: "#8a7e76" }}>{totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%</span>
+                    </div>
+                    <div style={{ height: 5, background: "#d6d0c8", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%`, background: "linear-gradient(90deg, #82b99a, #a8c4b0)", borderRadius: 3, transition: "width 0.4s" }} />
+                    </div>
+                    {overdueTasks.length > 0 && (
+                      <button onClick={() => setShowCarryOverPanel(true)} style={{ background: "#c8989820", border: "1px solid #c89898", color: "#c89898", borderRadius: 5, padding: "3px 8px", fontSize: 10, cursor: "pointer", marginTop: 2 }}>
+                        ↻ {overdueTasks.length} overdue — carry over?
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Daily */}
+              {weekOffset === 0 && (
+                <div style={{ flex: 1, minWidth: 160 }}>
+                  <DailyDashboard
+                    todayName={todayName}
+                    tasks={tasks}
+                    schedule={schedule}
+                    fixedBlocks={fixedBlocks}
+                    setFocusDay={setFocusDay}
+                    setFocusWeekOffset={setFocusWeekOffset}
+                    setFocusMode={setFocusMode}
+                  />
+                </div>
+              )}
+            </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div style={{ display: "flex", gap: 2 }}>
