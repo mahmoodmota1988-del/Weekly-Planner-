@@ -308,7 +308,7 @@ function DailyDashboard({ todayName, tasks, schedule, fixedBlocks, setFocusDay, 
   const todayFixedMins = todayFixed.reduce((s, b) => s + (b.endHour - b.startHour) * 60, 0);
 
   return (
-    <div style={{ background: "#e8f2ea", border: "1px solid #a8c4b044", borderRadius: 8, padding: "8px 12px", marginBottom: 14 }}>
+    <div style={{ background: "#e8f2ea", border: "1px solid #a8c4b044", borderRadius: 8, padding: "10px 12px", marginBottom: 0, width: "100%", boxSizing: "border-box" }}>
       {/* Title row with Focus button inline */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
         <button
@@ -1825,9 +1825,24 @@ export default function App() {
             </div>
 
             {/* ── Weekly + Daily Progress side by side ── */}
-            <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "stretch" }}>
 
-              {/* Weekly */}
+              {/* Daily — LEFT */}
+              {weekOffset === 0 && (
+                <div style={{ flex: 1, minWidth: 160, display: "flex" }}>
+                  <DailyDashboard
+                    todayName={todayName}
+                    tasks={tasks}
+                    schedule={schedule}
+                    fixedBlocks={fixedBlocks}
+                    setFocusDay={setFocusDay}
+                    setFocusWeekOffset={setFocusWeekOffset}
+                    setFocusMode={setFocusMode}
+                  />
+                </div>
+              )}
+
+              {/* Weekly — RIGHT */}
               <div style={{ flex: 2, minWidth: 220, background: "#efeae2", border: "1px solid #d6d0c8", borderRadius: 10, padding: "10px 12px" }}>
                 <div style={{ fontSize: 9, color: "#8a7e76", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8 }}>This Week</div>
                 <div style={{ display: "flex", gap: 0, flexWrap: "wrap", marginBottom: 8 }}>
@@ -1863,21 +1878,6 @@ export default function App() {
                   </div>
                 </div>
               </div>
-
-              {/* Daily */}
-              {weekOffset === 0 && (
-                <div style={{ flex: 1, minWidth: 160 }}>
-                  <DailyDashboard
-                    todayName={todayName}
-                    tasks={tasks}
-                    schedule={schedule}
-                    fixedBlocks={fixedBlocks}
-                    setFocusDay={setFocusDay}
-                    setFocusWeekOffset={setFocusWeekOffset}
-                    setFocusMode={setFocusMode}
-                  />
-                </div>
-              )}
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
