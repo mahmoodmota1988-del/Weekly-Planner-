@@ -383,6 +383,7 @@ export default function App() {
 
   const [view, setView] = useState("week");
   const [weekOffset, setWeekOffset] = useState(0);
+  const [pastWeekOffset, setPastWeekOffset] = useState(0); // 0=this week, -1=last week, -2=two weeks ago etc
   const [newTask, setNewTask] = useState({ ...defaultTask });
   const [newFixed, setNewFixed] = useState({ ...defaultFixed });
   const [customMins, setCustomMins] = useState("");
@@ -457,6 +458,50 @@ export default function App() {
     sunday.setDate(monday.getDate() + 6);
     const fmt = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
     return `${fmt(monday)} – ${fmt(sunday)}`;
+  };
+
+  // Past week label using actual calendar dates
+  const pastWeekLabel = (negOffset) => {
+    const monday = getWeekMonday(negOffset);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const fmt = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return `${fmt(monday)} – ${fmt(sunday)}`;
+  };
+
+  // Save a snapshot of the current week to past weeks archive
+  const archiveCurrentWeek = () => {
+    const now = new Date();
+    // Generate a key based on the actual Monday date of this week
+    const monday = getWeekMonday(0);
+    const key = `planner_archive_${monday.toISOString().split("T")[0]}`;
+    const existing = localStorage.getItem(key);
+    if (!existing) { // only save if not already archived
+      const snapshot = {
+        weekStart: monday.toISOString().split("T")[0],
+        schedule,
+        tasks: tasks.map(t => ({ id: t.id, title: t.title, category: t.category, completed: t.completed, priority: t.priority, durationType: t.durationType, completedSessions: t.completedSessions, totalSessions: t.totalSessions })),
+        savedAt: now.toISOString(),
+      };
+      localStorage.setItem(key, JSON.stringify(snapshot));
+    }
+  };
+
+  // Get list of archived weeks (sorted most recent first)
+  const getArchivedWeeks = () => {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("planner_archive_")) keys.push(key);
+    }
+    return keys.sort().reverse().slice(0, 4); // keep last 4
+  };
+
+  // Get a specific archived week by index (0 = most recent past week)
+  const getArchivedWeek = (index) => {
+    const keys = getArchivedWeeks();
+    if (!keys[index]) return null;
+    try { return JSON.parse(localStorage.getItem(keys[index]) || "null"); } catch { return null; }
   };
 
   // Schedule entries are {id, time} objects — stored per week key
@@ -1807,22 +1852,162 @@ export default function App() {
             {/* ── Week Navigator ── */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <button
-                onClick={() => { setWeekOffset((w) => Math.max(0, w - 1)); setAiSuggestion(null); }}
-                disabled={weekOffset === 0}
-                style={{ background: "none", border: "1px solid #d6d0c8", color: weekOffset === 0 ? "#d6d0c8" : "#726460", borderRadius: 6, padding: "5px 12px", fontSize: 13, cursor: weekOffset === 0 ? "not-allowed" : "pointer" }}
+                onClick={() => {
+                  if (weekOffset > 0) {
+                    setWeekOffset((w) => w - 1);
+                  } else {
+                    // Going to past — archive current week first
+                    archiveCurrentWeek();
+                    setPastWeekOffset((w) => Math.max(-4, w - 1));
+                  }
+                  setAiSuggestion(null);
+                }}
+                disabled={pastWeekOffset <= -4 && weekOffset === 0}
+                style={{ background: "none", border: "1px solid #d6d0c8", color: (pastWeekOffset <= -4 && weekOffset === 0) ? "#d6d0c8" : "#726460", borderRadius: 6, padding: "5px 12px", fontSize: 13, cursor: (pastWeekOffset <= -4 && weekOffset === 0) ? "not-allowed" : "pointer" }}
               >← Prev</button>
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 13, color: "#3c3226", fontWeight: weekOffset === 0 ? "bold" : "normal" }}>
-                  {weekOffset === 0 ? "This Week" : weekOffset === 1 ? "Next Week" : `In ${weekOffset} Weeks`}
+                <div style={{ fontSize: 13, color: "#3c3226", fontWeight: (weekOffset === 0 && pastWeekOffset === 0) ? "bold" : "normal" }}>
+                  {pastWeekOffset < 0
+                    ? pastWeekOffset === -1 ? "Last Week" : `${Math.abs(pastWeekOffset)} Weeks Ago`
+                    : weekOffset === 0 ? "This Week"
+                    : weekOffset === 1 ? "Next Week"
+                    : `In ${weekOffset} Weeks`}
                 </div>
-                <div style={{ fontSize: 11, color: "#8a7e76" }}>{weekLabel(weekOffset)}</div>
+                <div style={{ fontSize: 11, color: "#8a7e76" }}>
+                  {pastWeekOffset < 0 ? pastWeekLabel(pastWeekOffset) : weekLabel(weekOffset)}
+                </div>
+                {pastWeekOffset < 0 && (
+                  <button onClick={() => { setPastWeekOffset(0); setWeekOffset(0); }} style={{ fontSize: 10, color: "#a8c4b0", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Back to today</button>
+                )}
               </div>
               <button
-                onClick={() => { setWeekOffset((w) => Math.min(4, w + 1)); setAiSuggestion(null); }}
+                onClick={() => {
+                  if (pastWeekOffset < 0) {
+                    setPastWeekOffset((w) => w + 1);
+                  } else {
+                    setWeekOffset((w) => Math.min(4, w + 1));
+                  }
+                  setAiSuggestion(null);
+                }}
                 disabled={weekOffset === 4}
                 style={{ background: "none", border: "1px solid #d6d0c8", color: weekOffset === 4 ? "#d6d0c8" : "#726460", borderRadius: 6, padding: "5px 12px", fontSize: 13, cursor: weekOffset === 4 ? "not-allowed" : "pointer" }}
               >Next →</button>
             </div>
+
+            {/* ── PAST WEEK VIEW ── */}
+            {pastWeekOffset < 0 && (() => {
+              const archiveIndex = Math.abs(pastWeekOffset) - 1;
+              const archived = getArchivedWeek(archiveIndex);
+              if (!archived) return (
+                <div style={{ textAlign: "center", padding: "40px 20px", color: "#a09890" }}>
+                  <div style={{ fontSize: 28, marginBottom: 10 }}>📅</div>
+                  <div style={{ fontSize: 14, color: "#6c6255", marginBottom: 6 }}>No archive for this week yet</div>
+                  <div style={{ fontSize: 12, color: "#a09890" }}>Past weeks are saved automatically when you navigate away from them. Archives will appear here from next week onwards.</div>
+                </div>
+              );
+
+              const archivedTasks = archived.tasks || [];
+              const archivedSched = archived.schedule || {};
+              const completedCount = archivedTasks.filter(t => t.completed).length;
+              const totalCount = archivedTasks.filter(t => t.durationType !== "ongoing").length;
+              const pct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+              return (
+                <div>
+                  {/* Summary bar */}
+                  <div style={{ background: "#efeae2", border: "1px solid #d6d0c8", borderRadius: 10, padding: "12px 16px", marginBottom: 14 }}>
+                    <div style={{ fontSize: 10, color: "#8a7e76", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8 }}>Week Summary</div>
+                    <div style={{ display: "flex", gap: 0, flexWrap: "wrap", marginBottom: 10 }}>
+                      <div style={{ flex: 1, minWidth: 70, textAlign: "center", padding: "4px 8px", borderRight: "1px solid #d6d0c8" }}>
+                        <div style={{ fontSize: 20, color: "#82b99a" }}>{completedCount}</div>
+                        <div style={{ fontSize: 8, color: "#8a7e76", textTransform: "uppercase", letterSpacing: "0.08em" }}>Completed</div>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 70, textAlign: "center", padding: "4px 8px", borderRight: "1px solid #d6d0c8" }}>
+                        <div style={{ fontSize: 20, color: "#c89898" }}>{totalCount - completedCount}</div>
+                        <div style={{ fontSize: 8, color: "#8a7e76", textTransform: "uppercase", letterSpacing: "0.08em" }}>Incomplete</div>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 70, textAlign: "center", padding: "4px 8px", borderRight: "1px solid #d6d0c8" }}>
+                        <div style={{ fontSize: 20, color: "#7aaec8" }}>{totalCount}</div>
+                        <div style={{ fontSize: 8, color: "#8a7e76", textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</div>
+                      </div>
+                      <div style={{ flex: 2, minWidth: 120, padding: "4px 12px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 4 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: 9, color: "#8a7e76" }}>Completion rate</span>
+                          <span style={{ fontSize: 9, color: "#8a7e76" }}>{pct}%</span>
+                        </div>
+                        <div style={{ height: 5, background: "#d6d0c8", borderRadius: 3, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, #82b99a, #a8c4b0)", borderRadius: 3 }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Day columns */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 7 }}>
+                    {DAYS.map((day, i) => {
+                      const dayEntries = archivedSched[day] || [];
+                      const dayTaskIds = dayEntries.map(e => typeof e === "object" ? e.id : e);
+                      const dayTasks = dayTaskIds.map(id => archivedTasks.find(t => t.id === id)).filter(Boolean);
+                      dayTasks.sort((a, b) => {
+                        const ta = (dayEntries.find(e => (typeof e === "object" ? e.id : e) === a.id))?.time || "99:99";
+                        const tb = (dayEntries.find(e => (typeof e === "object" ? e.id : e) === b.id))?.time || "99:99";
+                        return ta.localeCompare(tb);
+                      });
+                      return (
+                        <div key={day} style={{ background: "#efeae2", border: "1px solid #d6d0c8", borderRadius: 9, padding: 9, minHeight: 80, opacity: dayTasks.length === 0 ? 0.5 : 1 }}>
+                          <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "#726460", marginBottom: 6 }}>{SHORT_DAYS[i]}</div>
+                          {dayTasks.map(task => {
+                            const cat = getCat(task.category);
+                            const time = (dayEntries.find(e => (typeof e === "object" ? e.id : e) === task.id))?.time;
+                            return (
+                              <div key={task.id} style={{ borderLeft: `2px solid ${task.completed ? "#a8c4b0" : "#c89898"}`, borderRadius: 3, padding: "3px 6px", marginBottom: 3, background: task.completed ? "#e8f2ea" : "#fdf0ec" }}>
+                                <div style={{ fontSize: 10, color: task.completed ? "#4c7c5a" : "#8a4a3a", textDecoration: task.completed ? "none" : "none", display: "flex", alignItems: "center", gap: 4 }}>
+                                  <span style={{ fontSize: 9 }}>{task.completed ? "✓" : "○"}</span>
+                                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.title}</span>
+                                </div>
+                                {time && <div style={{ fontSize: 8, color: "#a09890" }}>🕐 {time}</div>}
+                              </div>
+                            );
+                          })}
+                          {dayTasks.length === 0 && <div style={{ fontSize: 9, color: "#c8c2ba" }}>Nothing scheduled</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Move incomplete tasks to this week */}
+                  {archivedTasks.filter(t => !t.completed && t.durationType !== "ongoing").length > 0 && (
+                    <div style={{ marginTop: 14, background: "#fdf0ec", border: "1px solid #c8989844", borderRadius: 8, padding: 12 }}>
+                      <div style={{ fontSize: 12, color: "#8a4a3a", marginBottom: 8 }}>
+                        {archivedTasks.filter(t => !t.completed && t.durationType !== "ongoing").length} incomplete task{archivedTasks.filter(t => !t.completed && t.durationType !== "ongoing").length !== 1 ? "s" : ""} from this week
+                      </div>
+                      <button
+                        onClick={() => {
+                          const incomplete = archivedTasks.filter(t => !t.completed && t.durationType !== "ongoing");
+                          // Add to this week's Monday if not already there
+                          const s = { ...schedule };
+                          incomplete.forEach(archivedTask => {
+                            const existing = tasks.find(t => t.id === archivedTask.id);
+                            if (existing && !Object.values(s).flat().some(e => (typeof e === "object" ? e.id : e) === archivedTask.id)) {
+                              s["Monday"] = [...(s["Monday"] || []), { id: archivedTask.id, time: null }];
+                            }
+                          });
+                          setSchedule(s);
+                          setPastWeekOffset(0);
+                          showToast(`${incomplete.length} tasks moved to this week`);
+                        }}
+                        style={{ background: "#8aa898", border: "none", color: "#fff", borderRadius: 7, padding: "8px 16px", fontSize: 12, cursor: "pointer" }}
+                      >
+                        Move all to this week →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Only show progress bars and week content when not viewing past */}
+            {pastWeekOffset === 0 && (<>
 
             {/* ── Weekly + Daily Progress side by side ── */}
             <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "stretch" }}>
@@ -2180,6 +2365,9 @@ export default function App() {
                 </div>
               </div>
             )}
+
+          </>)} {/* end pastWeekOffset === 0 */}
+
           </div>
         )}
 
