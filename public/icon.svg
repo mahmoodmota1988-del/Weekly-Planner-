@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#f4f0e8"/>
+  <rect x="64" y="100" width="384" height="352" rx="32" fill="#e8e3db" stroke="#c8be90" stroke-width="8"/>
+  <rect x="64" y="100" width="384" height="110" rx="32" fill="#8aa898"/>
+  <rect x="64" y="165" width="384" height="45" fill="#8aa898"/>
+  <rect x="148" y="64" width="28" height="90" rx="14" fill="#c8be90"/>
+  <rect x="336" y="64" width="28" height="90" rx="14" fill="#c8be90"/>
+  <line x1="64" y1="275" x2="448" y2="275" stroke="#d6d0c8" stroke-width="4"/>
+  <line x1="64" y1="345" x2="448" y2="345" stroke="#d6d0c8" stroke-width="4"/>
+  <line x1="174" y1="210" x2="174" y2="452" stroke="#d6d0c8" stroke-width="4"/>
+  <line x1="284" y1="210" x2="284" y2="452" stroke="#d6d0c8" stroke-width="4"/>
+  <line x1="394" y1="210" x2="394" y2="452" stroke="#d6d0c8" stroke-width="4"/>
+  <text x="256" y="162" text-anchor="middle" dominant-baseline="middle" font-family="Georgia, serif" font-size="72" font-weight="bold" fill="#ffffff" letter-spacing="6">EM</text>
+</svg>
